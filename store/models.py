@@ -32,7 +32,13 @@ class Cart_item(models.Model):
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
 class Order(models.Model):
-    status=models.CharField(max_length=250)
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('shipped', 'Shipped'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+    ]
 class Order_item(models.Model):
     Order=models.ForeignKey(models.CASCADE)
     Product=models.ForeignKey(models.CASCADE)
