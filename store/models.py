@@ -4,7 +4,7 @@ from django.db import models
 class Product(models.Model):
     name=models.CharField(max_length=250)
     description=models.TextField()
-    price=models.IntegerField()
+    price=models.DecimalField()
     stock_count=models.IntegerField()
 class Category(models.Model):
     name=models.CharField()
