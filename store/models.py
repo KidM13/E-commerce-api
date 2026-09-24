@@ -6,9 +6,9 @@ class Product(models.Model):
     description=models.TextField()
     price=models.DecimalField()
     stock_count=models.IntegerField()
+    Category=models.ForeignKey(models.CASCADE)
 class Category(models.Model):
-    name=models.CharField()
-    Product=models.ForeignKey(models.CASCADE)
+    name=models.CharField(max_length=250)
 class Cart(models.Model):
     
 class Cart_item(models.Model):
@@ -16,7 +16,7 @@ class Cart_item(models.Model):
     quantity=models.IntegerField()
     Cart=models.ForeignKey(models.CASCADE)
 class Order(models.Model):
-    status=models.CharField()
+    status=models.CharField(max_length=250)
 class Order_item(models.Model):
     Order=models.ForeignKey(models.CASCADE)
     Product=models.ForeignKey(models.CASCADE)
