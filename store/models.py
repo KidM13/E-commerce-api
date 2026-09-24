@@ -17,3 +17,7 @@ class Cart_item(models.Model):
     Cart=models.ForeignKey(models.CASCADE)
 class Order(models.Model):
     status=models.CharField()
+class Order_item(models.Model):
+    Order=models.ForeignKey(models.CASCADE)
+    Product=models.ForeignKey(models.CASCADE)
+    quantity=models.IntegerField()
