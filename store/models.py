@@ -9,3 +9,6 @@ class Product(models.Model):
 class Category(models.Model):
     name=models.CharField()
     Product=models.ForeignKey(models.CASCADE)
+class Cart_item(models.Model):
+    Product=models.ForeignKey(models.CASCADE)
+    quantity=models.IntegerField()
