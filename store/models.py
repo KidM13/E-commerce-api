@@ -6,3 +6,6 @@ class Product(models.Model):
     description=models.TextField()
     price=models.IntegerField()
     stock_count=models.IntegerField()
+class Category(models.Model):
+    name=models.CharField()
+    Product=models.ForeignKey(models.CASCADE)
