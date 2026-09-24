@@ -16,6 +16,10 @@ class Product(models.Model):
         return self.name
 
 class Cart(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Cart for {self.user.username}"
     
 class Cart_item(models.Model):
     Product=models.ForeignKey(models.CASCADE)
