@@ -2,16 +2,19 @@ from django.db import models
 from django.conf import settings
 
 # Create your models here.
+class Category(models.Model):
+    name=models.CharField(max_length=250)
+    def __str__(self):
+        return self.name
 class Product(models.Model):
     name=models.CharField(max_length=250)
     description=models.TextField()
     price=models.DecimalField()
     stock_count=models.IntegerField()
-    Category=models.ForeignKey(models.CASCADE)
-class Category(models.Model):
-    name=models.CharField(max_length=250)
+    category=models.ForeignKey(Category,on_delete=models.CASCADE)
     def __str__(self):
         return self.name
+
 class Cart(models.Model):
     
 class Cart_item(models.Model):
