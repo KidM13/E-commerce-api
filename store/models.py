@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 class Product(models.Model):
@@ -9,6 +10,8 @@ class Product(models.Model):
     Category=models.ForeignKey(models.CASCADE)
 class Category(models.Model):
     name=models.CharField(max_length=250)
+    def __str__(self):
+        return self.name
 class Cart(models.Model):
     
 class Cart_item(models.Model):
