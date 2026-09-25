@@ -27,7 +27,7 @@ class Cart_item(models.Model):
     quantity = models.IntegerField()
 
     class Meta:
-        unique_together = ['cart', 'product']
+        unique_together = ['cart', 'product']# to be asked
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
