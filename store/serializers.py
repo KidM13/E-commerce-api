@@ -10,3 +10,8 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model=Product
         fields=['name','description','price','stock_count','category']
+class CartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Cart
+        fields=['user']
+
