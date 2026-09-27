@@ -1,32 +1,32 @@
 from rest_framework import serializers
 from .models import Category,Product,Cart,Cart_item,Order,Order_item
 
-class CategorySerializer(serializers.Modelserializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model=Category
-        fields=['name']
+        fields=['id','name']
         
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model=Product
-        fields=['name','description','price','stock_count','category']
+        fields=['id','name','description','price','stock_count','category']
 class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model=Cart
-        fields=['user']
+        fields=['id','user']
 class Cart_itemSerializer(serializers.ModelSerializer):
     class Meta:
         model=Cart_item
-        fields=['cart','product','quantity']
+        fields=['id','cart','product','quantity']
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model=Order
-        fields=['user','status','created_at']
+        fields=['id','user','status','created_at']
 class Order_itemSerializer(serializers.ModelSerializer):
     class Meta:
         model=Order_item
-        fields=['order','product','quantity','price_at_purchase']
+        fields=['id''order','product','quantity','price_at_purchase']
 
 
 
