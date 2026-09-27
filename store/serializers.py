@@ -23,6 +23,11 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model=Order
         fields=['user','status','created_at']
+class Order_itemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Order_item
+        fields=['order','product','quantity','price_at_purchase']
+
 
 
 
