@@ -12,3 +12,7 @@ class ProductViewset(viewsets.ModelViewSet):
     serializer_class=ProductSerializer
     permission_classes=[IsAdminOrReadOnly]
     queryset=Product.objects.all()
+class CartViewset(viewsets.ModelViewSet):
+    serializer_class=CartSerializer
+    permission_classes=[IsCartOwner]
+    queryset=Cart.objects.all()
