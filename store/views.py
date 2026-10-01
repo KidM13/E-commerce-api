@@ -8,3 +8,7 @@ class CategoryViewset(viewsets.ModelViewSet):
     serializer_class=CategorySerializer
     permission_classes=[IsAdminOrReadOnly]
     queryset=Category.objects.all()
+class ProductViewset(viewsets.ModelViewSet):
+    serializer_class=ProductSerializer
+    permission_classes=[IsAdminOrReadOnly]
+    queryset=Product.objects.all()
