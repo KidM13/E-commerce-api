@@ -15,7 +15,8 @@ class ProductViewset(viewsets.ModelViewSet):
 class CartViewset(viewsets.ModelViewSet):
     serializer_class=CartSerializer
     permission_classes=[IsCartOwner]
-    queryset=Cart.objects.all()
+    def get_queryset(self):
+        return Cart.objects.filter(user=self.request.user)
 class CartItemViewset(viewsets.ModelViewSet):
     serializer_class=CartItemSerializer
     permission_classes=[IsCartItemOwner]
