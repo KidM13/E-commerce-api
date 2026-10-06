@@ -24,3 +24,6 @@ class OrderViewset(viewsets.ModelViewSet):
     serializer_class=OrderSerializer
     permission_classes=[IsOrderOwnerOrStaffReadOnly]
     queryset=Order.objects.all()
+class OrderItemViewset(viewsets.ModelViewSet):
+    serializer_class=OrderItemSerializer
+    queryset=Order_item.objects.select_related('order')
