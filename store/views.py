@@ -16,3 +16,7 @@ class CartViewset(viewsets.ModelViewSet):
     serializer_class=CartSerializer
     permission_classes=[IsCartOwner]
     queryset=Cart.objects.all()
+class CartItemViewset(viewsets.ModelViewSet):
+    serializer_class=CartItemSerializer
+    permission_classes=[IsCartItemOwner]
+    queryset=Cart_item.objects.select_related('cart')
