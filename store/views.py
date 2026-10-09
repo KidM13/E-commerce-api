@@ -5,6 +5,8 @@ from .permission import IsAdminOrReadOnly,IsCartItemOwner,IsCartOwner,IsOrderOwn
 from .models import Category,Product,Cart,Cart_item,Order,Order_item
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 class CategoryViewset(viewsets.ModelViewSet):
     serializer_class=CategorySerializer
@@ -20,68 +22,67 @@ class CartViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
     @action(detail=True,methods=['POST'])
-    def add_to_cart(request):
-    product_id = request.data.get("product_id")
-    quantity = request.data.get("quantity", 1)
+    def add_to_cart(self, request, pk=None):
+        # 1. Get the cart belonging to the current user
+        cart = self.get_object()
 
-    product = get_object_or_404(Product, id=product_id)
+        # 2. Get the product and requested quantity
+        product_id = request.data.get("product_id")
+        quantity = request.data.get("quantity", 1)
 
-    # Validate quantity
-    try:
-        quantity = int(quantity)
-    except (ValueError, TypeError):
+        product = get_object_or_404(Product, id=product_id)
+
+        # 3. Validate quantity
+        try:
+            if isinstance(quantity, bool):
+                raise ValueError
+            quantity = int(quantity)
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Quantity must be a valid integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if quantity < 1:
+            return Response(
+                {"error": "Quantity must be at least 1."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 4. Check whether this product is already in the cart
+        item = Cart_item.objects.filter(
+            cart=cart,
+            product=product,
+        ).first()
+
+        new_quantity = quantity
+        if item:
+            new_quantity += item.quantity
+
+        # 5. Check stock before changing the database
+        if new_quantity > product.stock_count:
+            return Response(
+                {"error": "Not enough stock available."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 6. Create the item or update its quantity
+        if item:
+            item.quantity = new_quantity
+            item.save(update_fields=["quantity"])
+        else:
+            item = Cart_item.objects.create(
+                cart=cart,
+                product=product,
+                quantity=quantity,
+            )
+
+        # 7. Return the result
         return Response(
-            {"error": "Quantity must be an integer."},
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "message": "Item added to cart successfully.",
+                "product": product.name,
+                "quantity": item.quantity,
+            },
+            status=status.HTTP_200_OK,
         )
-
-    if quantity < 1:
-        return Response(
-            {"error": "Quantity must be at least 1."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    cart, _ = Cart.objects.get_or_create(user=request.user)
-
-    item, created = CartItem.objects.get_or_create(
-        cart=cart,
-        product=product,
-        defaults={"quantity": quantity}
-    )
-
-    if not created:
-        item.quantity += quantity
-
-    if item.quantity > product.stock:
-        return Response(
-            {"error": "Not enough stock available."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    item.save()
-
-    return Response(
-        {
-            "message": "Item added to cart successfully.",
-            "product": product.name,
-            "quantity": item.quantity
-        },
-        status=status.HTTP_200_OK
-    )
-
-class CartItemViewset(viewsets.ModelViewSet):
-    serializer_class=CartItemSerializer
-    permission_classes=[IsCartItemOwner]
-    queryset=Cart_item.objects.select_related('cart')
-class OrderViewset(viewsets.ModelViewSet):
-    serializer_class=OrderSerializer
-    permission_classes=[IsOrderOwnerOrStaffReadOnly]
-    def get_queryset(self):
-       user=self.request.user
-       if user.is_staff:
-           return Order.objects.all()
-       return Order.objects.filter(user=user)
-    
-class OrderItemViewset(viewsets.ModelViewSet):
-    serializer_class=OrderItemSerializer
-    queryset=Order_item.objects.select_related('order')
