@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 
 class CategoryViewset(viewsets.ModelViewSet):
     serializer_class=CategorySerializer
@@ -16,66 +17,71 @@ class ProductViewset(viewsets.ModelViewSet):
     serializer_class=ProductSerializer
     permission_classes=[IsAdminOrReadOnly]
     queryset=Product.objects.all()
+
+def parse_int(value):
+    """Convert to int, but reject booleans (True would otherwise become 1)."""
+    if isinstance(value, bool):
+        raise ValueError
+    return int(value)
 class CartViewset(viewsets.ModelViewSet):
     serializer_class=CartSerializer
     permission_classes=[IsCartOwner]
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
-    @action(detail=True,methods=['POST'])
-    def add_to_cart(self, request, pk=None):
-        # 1. Get the cart belonging to the current user
-        cart = self.get_object()
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_to_cart(self, request):
+        # 1. The user's own cart, created the first time they need it
+        cart, _ = Cart.objects.get_or_create(user=request.user)
 
-        # 2. Get the product and requested quantity
-        product_id = request.data.get("product_id")
-        quantity = request.data.get("quantity", 1)
-
-        product = get_object_or_404(Product, id=product_id)
+        # 2. Validate and fetch the product
+        try:
+            product_id = parse_int(request.data.get("product_id"))
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "product_id is required and must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            product = Product.objects.get(pk=product_id)
+        except Product.DoesNotExist:
+            return Response(
+                {"error": "Product not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         # 3. Validate quantity
         try:
-            if isinstance(quantity, bool):
-                raise ValueError
-            quantity = int(quantity)
+            quantity = parse_int(request.data.get("quantity", 1))
         except (ValueError, TypeError):
             return Response(
                 {"error": "Quantity must be a valid integer."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         if quantity < 1:
             return Response(
                 {"error": "Quantity must be at least 1."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 4. Check whether this product is already in the cart
-        item = Cart_item.objects.filter(
-            cart=cart,
-            product=product,
-        ).first()
+        # 4. Is this product already in the cart?
+        item = Cart_item.objects.filter(cart=cart, product=product).first()
+        new_quantity = quantity + (item.quantity if item else 0)
 
-        new_quantity = quantity
-        if item:
-            new_quantity += item.quantity
-
-        # 5. Check stock before changing the database
+        # 5. Courtesy stock check (checkout re-checks inside a transaction)
         if new_quantity > product.stock_count:
             return Response(
                 {"error": "Not enough stock available."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 6. Create the item or update its quantity
+        # 6. Update the existing row or create a new one
         if item:
             item.quantity = new_quantity
             item.save(update_fields=["quantity"])
+            response_status = status.HTTP_200_OK
         else:
-            item = Cart_item.objects.create(
-                cart=cart,
-                product=product,
-                quantity=quantity,
-            )
+            item = Cart_item.objects.create(cart=cart, product=product, quantity=quantity)
+            response_status = status.HTTP_201_CREATED
 
         # 7. Return the result
         return Response(
@@ -84,5 +90,5 @@ class CartViewset(viewsets.ModelViewSet):
                 "product": product.name,
                 "quantity": item.quantity,
             },
-            status=status.HTTP_200_OK,
+            status=response_status,
         )
