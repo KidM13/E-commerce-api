@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets,mixins
 from .serializers import CategorySerializer,ProductSerializer,CartSerializer,CartItemSerializer,OrderSerializer,OrderItemSerializer
 from .permission import IsAdminOrReadOnly,IsCartItemOwner,IsCartOwner,IsOrderOwnerOrStaffReadOnly
 from .models import Category,Product,Cart,Cart_item,Order,Order_item
@@ -92,7 +92,11 @@ class CartViewset(viewsets.ModelViewSet):
             },
             status=response_status,
         )
-class CartItemViewset(viewsets.ModelViewSet):
+class CartItemViewset(mixins.ListModelMixin,
+                      mixins.RetrieveModelMixin,
+                      mixins.UpdateModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
     serializer_class=CartItemSerializer
     permission_classes=[IsCartItemOwner]
     def get_queryset(self):
