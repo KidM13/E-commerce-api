@@ -92,3 +92,8 @@ class CartViewset(viewsets.ModelViewSet):
             },
             status=response_status,
         )
+class CartItemViewset(viewsets.ModelViewSet):
+    serializer_class=CartItemSerializer
+    permission_classes=[IsCartItemOwner]
+    def get_queryset(self):
+        Cart_item.objects.select_related('cart','product').filter(cart__user=self.request.user)
