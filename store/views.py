@@ -101,3 +101,8 @@ class CartItemViewset(mixins.ListModelMixin,
     permission_classes=[IsCartItemOwner]
     def get_queryset(self):
         Cart_item.objects.select_related('cart','product').filter(cart__user=self.request.user)
+class OrderViewset(viewsets.ModelViewSet):
+    serializer_class=OrderSerializer
+    permission_classes=[IsOrderOwnerOrStaffReadOnly]
+    def get_queryset(self):
+        return Order.objects.all().filter(user=self.request.user)
