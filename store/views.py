@@ -108,6 +108,10 @@ class OrderViewset(viewsets.ModelViewSet):
         return Order.objects.all().filter(user=self.request.user)
 class OrderItemViewset(viewsets.ModelViewSet):
     serializer_class=OrderItemSerializer
-    permission_classes=[IsOrderOwnerOrStaffReadOnly]
+    permission_classes=[IsAuthenticated]
     def get_queryset(self):
-        return Order_item.objects.select_related('order','product').filter(order__user=self.request.user)
+        user=self.request.user
+        items=Order_item.objects.select_related('order','product')
+        if user.is_staff:
+            return items
+        return items.filter(Order__user=user)
