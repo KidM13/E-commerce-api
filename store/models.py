@@ -9,7 +9,7 @@ class Category(models.Model):
 class Product(models.Model):
     name=models.CharField(max_length=250)
     description=models.TextField()
-    price=models.DecimalField()
+    price=models.DecimalField(max_digits=10,decimal_places=2)
     stock_count=models.IntegerField()
     category=models.ForeignKey(Category,on_delete=models.CASCADE)
     def __str__(self):
