@@ -92,15 +92,20 @@ class CartViewset(viewsets.ModelViewSet):
             },
             status=response_status,
         )
-class CartItemViewset(mixins.ListModelMixin,
-                      mixins.RetrieveModelMixin,
-                      mixins.UpdateModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CartItemViewset(viewsets.ModelViewset):
     serializer_class=CartItemSerializer
     permission_classes=[IsCartItemOwner]
     def get_queryset(self):
         return Cart_item.objects.select_related('cart','product').filter(cart__user=self.request.user)
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        if self.request.user.is_authenticated:
+            context['cart'] = Cart.objects.filter(
+                user=self.request.user
+            ).first()
+
+        return context
 class OrderViewset(viewsets.ModelViewSet):
     serializer_class=OrderSerializer
     permission_classes=[IsOrderOwnerOrStaffReadOnly]
