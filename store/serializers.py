@@ -20,6 +20,31 @@ class CartItemSerializer(serializers.ModelSerializer):
         model=Cart_item
         fields=['id','cart','product','quantity']
         read_only_fields = ['cart']
+    def validate(self, attrs):
+        product = attrs.get(
+            'product',
+            self.instance.product if self.instance else None
+        )
+        quantity = attrs.get(
+            'quantity',
+            self.instance.quantity if self.instance else None
+        )
+
+        if quantity is not None and quantity <= 0:
+            raise serializers.ValidationError({
+                'quantity': 'Quantity must be greater than zero.'
+            })
+
+        if product and quantity is not None:
+            if quantity > product.stock_count:
+                raise serializers.ValidationError({
+                    'quantity': (
+                        f'Only {product.stock_count} units '
+                        'are available in stock.'
+                    )
+                })
+
+     return attrs
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
