@@ -50,11 +50,12 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model=Order
         fields=['id','user','status','created_at']
+        read_only_fields = ['id', 'user', 'status', 'created_at']
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model=Order_item
         fields=['id','order','product','quantity','price_at_purchase']
-        read_only_fields=['price_at_purchase']
+        read_only_fields=fields
 
 
 
