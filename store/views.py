@@ -93,7 +93,7 @@ class CartViewset(viewsets.ModelViewSet):
             },
             status=response_status,
         )
-class CartItemViewset(viewsets.ModelViewset):
+class CartItemViewset(viewsets.ModelViewSet):
     serializer_class=CartItemSerializer
     permission_classes=[IsCartItemOwner]
     def get_queryset(self):

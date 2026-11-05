@@ -43,8 +43,9 @@ class CartItemSerializer(serializers.ModelSerializer):
                         'are available in stock.'
                     )
                 })
+        return attrs        
 
-     return attrs
+     
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
