@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from django.db import transaction
 
 class CategoryViewset(viewsets.ModelViewSet):
     serializer_class=CategorySerializer
@@ -106,11 +107,102 @@ class CartItemViewset(viewsets.ModelViewset):
             ).first()
 
         return context
-contextclass OrderViewset(viewsets.ModelViewSet):
+class OrderViewset(viewsets.ModelViewSet):
     serializer_class=OrderSerializer
     permission_classes=[IsOrderOwnerOrStaffReadOnly]
     def get_queryset(self):
         return Order.objects.all().filter(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {'detail': 'Use the checkout endpoint to create an order.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[IsAuthenticated]
+    )
+    def checkout(self, request):
+        with transaction.atomic():
+
+            # 1. Get the customer's cart
+            cart = get_object_or_404(
+                Cart.objects.select_for_update(),
+                user=request.user
+            )
+
+            # 2. Get all cart items
+            cart_items = list(
+                Cart_item.objects.filter(cart=cart).select_related('product')
+            )
+
+            if not cart_items:
+                return Response(
+                    {'detail': 'Your cart is empty.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 3. Lock products and check stock
+            product_ids = [item.product_id for item in cart_items]
+
+            products = Product.objects.select_for_update().filter(
+                id__in=product_ids
+            )
+
+            product_map = {product.id: product for product in products}
+
+            for item in cart_items:
+                product = product_map.get(item.product_id)
+
+                if product is None:
+                    return Response(
+                        {'detail': 'A product in your cart no longer exists.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                if item.quantity > product.stock_count:
+                    return Response(
+                        {
+                            'detail': (
+                                f'Not enough stock for {product.name}. '
+                                f'Available: {product.stock_count}, '
+                                f'Requested: {item.quantity}.'
+                            )
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # 4. Create the order
+            order = Order.objects.create(
+                user=request.user,
+                status='pending'
+            )
+
+            # 5. Create order items and reduce stock
+            for item in cart_items:
+                product = product_map[item.product_id]
+
+                Order_item.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=item.quantity,
+                    price_at_purchase=product.price
+                )
+
+                product.stock_count -= item.quantity
+                product.save(update_fields=['stock_count'])
+
+            # 6. Clear the cart
+            Cart_item.objects.filter(cart=cart).delete()
+
+        # 7. Return the created order
+        serializer = self.get_serializer(order)
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
 class OrderItemViewset(viewsets.ModelViewSet):
     serializer_class=OrderItemSerializer
     permission_classes=[IsAuthenticated]
