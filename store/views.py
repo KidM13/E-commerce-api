@@ -17,6 +17,11 @@ class CategoryViewset(viewsets.ModelViewSet):
 class ProductViewset(viewsets.ModelViewSet):
     serializer_class=ProductSerializer
     permission_classes=[IsAdminOrReadOnly]
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+
+        return [IsAdminUser()]
     queryset=Product.objects.all()
 
 def parse_int(value):
@@ -29,6 +34,8 @@ class CartViewset(viewsets.ModelViewSet):
     permission_classes=[IsCartOwner]
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def add_to_cart(self, request):
         # 1. The user's own cart, created the first time they need it
