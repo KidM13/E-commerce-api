@@ -9,6 +9,8 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
+from rest_framework.permissions import AllowAny, IsAdminUser
+
 
 class CategoryViewset(viewsets.ModelViewSet):
     serializer_class=CategorySerializer
@@ -118,7 +120,10 @@ class OrderViewset(viewsets.ModelViewSet):
     serializer_class=OrderSerializer
     permission_classes=[IsOrderOwnerOrStaffReadOnly]
     def get_queryset(self):
-        return Order.objects.all().filter(user=self.request.user)
+        if self.request.user.is_staff:
+            return Order.objects.all()
+        return Order.objects.filter(user=self.request.user)
+            
     def create(self, request, *args, **kwargs):
         return Response(
             {'detail': 'Use the checkout endpoint to create an order.'},
