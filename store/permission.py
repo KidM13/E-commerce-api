@@ -19,9 +19,12 @@ class IsAdminOrReadOnly(BasePermission):
             return True
         return bool(request.user and request.user.is_staff)
 class IsOrderOwnerOrStaffReadOnly(BasePermission):
-    """For Order — owner or staff can view; no direct edits through the standard endpoints"""
     def has_object_permission(self, request, view, obj):
+        if request.user.is_staff:
+            return True
+
         if request.method in SAFE_METHODS:
-            return obj.user == request.user or request.user.is_staff
-        return False   # blocks PUT/PATCH/DELETE entirely through the normal ViewSet actions
+            return obj.user == request.user
+
+        return False
 
