@@ -25,6 +25,13 @@ class ProductViewset(viewsets.ModelViewSet):
 
         return [IsAdminUser()]
     queryset=Product.objects.all()
+    filterset_fields = ['category', 'price']
+
+    search_fields = ['name', 'description']
+
+    ordering_fields = ['name', 'price', 'stock_count']
+
+    ordering = ['name']
 
 def parse_int(value):
     """Convert to int, but reject booleans (True would otherwise become 1)."""
