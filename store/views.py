@@ -129,6 +129,54 @@ class OrderViewset(viewsets.ModelViewSet):
             {'detail': 'Use the checkout endpoint to create an order.'},
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
+    @action(
+            detail=True,
+            methods=['patch'],
+            permission_classes=[IsAuthenticated,IsAdminUser],
+            )
+    def update_status(self,request,pk=None):
+        
+     order = self.get_object()
+
+    
+     new_status = request.data.get('status')
+
+     if not new_status:
+        return Response(
+            {'detail': 'Status is required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    
+     allowed_transitions = {
+        'pending': ['paid', 'cancelled'],
+        'paid': ['shipped', 'cancelled'],
+        'shipped': ['delivered'],
+        'delivered': [],
+        'cancelled': []
+      }
+
+    
+      if new_status not in allowed_transitions.get(order.status, []):
+        return Response(
+            {
+                'detail': (
+                    f'Cannot change status from {order.status} '
+                    f'to {new_status}.'
+                )
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # 5. Update and save
+     order.status = new_status
+     order.save(update_fields=['status'])
+
+    
+     serializer = self.get_serializer(order)
+
+     return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     @action(
         detail=False,
@@ -215,6 +263,7 @@ class OrderViewset(viewsets.ModelViewSet):
             serializer.data,
             status=status.HTTP_201_CREATED
         )
+
 class OrderItemViewset(viewsets.ModelViewSet):
     serializer_class=OrderItemSerializer
     permission_classes=[IsAuthenticated]
