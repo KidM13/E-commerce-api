@@ -130,33 +130,35 @@ class OrderViewset(viewsets.ModelViewSet):
             status=status.HTTP_405_METHOD_NOT_ALLOWED
         )
     @action(
-            detail=True,
-            methods=['patch'],
-            permission_classes=[IsAuthenticated,IsAdminUser],
-            )
-    def update_status(self,request,pk=None):
-        
-     order = self.get_object()
+    detail=True,
+    methods=['patch'],
+    permission_classes=[IsAdminUser]
+         )
+    def update_status(self, request, pk=None):
 
-    
-     new_status = request.data.get('status')
 
-     if not new_status:
+    # 1. Get the order
+      order = self.get_object()
+
+    # 2. Get the requested status
+      new_status = request.data.get('status')
+
+      if not new_status:
         return Response(
             {'detail': 'Status is required.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    
-     allowed_transitions = {
+    # 3. Define allowed transitions
+      allowed_transitions = {
         'pending': ['paid', 'cancelled'],
         'paid': ['shipped', 'cancelled'],
         'shipped': ['delivered'],
         'delivered': [],
         'cancelled': []
-      }
+         }
 
-    
+    # 4. Check whether the transition is allowed
       if new_status not in allowed_transitions.get(order.status, []):
         return Response(
             {
@@ -169,14 +171,13 @@ class OrderViewset(viewsets.ModelViewSet):
         )
 
     # 5. Update and save
-     order.status = new_status
-     order.save(update_fields=['status'])
+      order.status = new_status
+      order.save(update_fields=['status'])
 
-    
-     serializer = self.get_serializer(order)
+    # 6. Return updated order
+      serializer = self.get_serializer(order)
 
-     return Response(serializer.data, status=status.HTTP_200_OK)
-
+      return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
@@ -263,6 +264,7 @@ class OrderViewset(viewsets.ModelViewSet):
             serializer.data,
             status=status.HTTP_201_CREATED
         )
+
 
 class OrderItemViewset(viewsets.ModelViewSet):
     serializer_class=OrderItemSerializer
