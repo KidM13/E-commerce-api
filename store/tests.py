@@ -268,4 +268,36 @@ class EcommerceAPITests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['count'], 1)
+    def test_product_pagination(self):
+      for i in range(3):
+        Product.objects.create(
+            name=f'Product {i}',
+            description='Test product',
+            price=Decimal('200.00'),
+            stock_count=5,
+            category=self.category
+        )
+
+     response = self.client.get('/api/product/')
+
+     self.assertEqual(response.status_code, 200)
+     self.assertEqual(response.data['count'], 4)
+     self.assertEqual(len(response.data['results']), 3)
+     self.assertIsNotNone(response.data['next'])
+
+
+    def test_product_ordering_by_price(self):
+     Product.objects.create(
+        name='Cheap product',
+        description='Test product',
+        price=Decimal('100.00'),
+        stock_count=5,
+        category=self.category
+    )
+
+     response = self.client.get('/api/product/?ordering=-price')
+
+     self.assertEqual(response.status_code, 200)
+     self.assertEqual(response.data['results'][0]['name'], 'Laptop')
+
 
