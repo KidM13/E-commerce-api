@@ -278,12 +278,12 @@ class EcommerceAPITests(TestCase):
             category=self.category
         )
 
-     response = self.client.get('/api/product/')
+      response = self.client.get('/api/product/')
 
-     self.assertEqual(response.status_code, 200)
-     self.assertEqual(response.data['count'], 4)
-     self.assertEqual(len(response.data['results']), 3)
-     self.assertIsNotNone(response.data['next'])
+      self.assertEqual(response.status_code, 200)
+      self.assertEqual(response.data['count'], 4)
+      self.assertEqual(len(response.data['results']), 3)
+      self.assertIsNotNone(response.data['next'])
 
 
     def test_product_ordering_by_price(self):
