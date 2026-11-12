@@ -281,4 +281,4 @@ class OrderItemViewset(viewsets.ModelViewSet):
         items=Order_item.objects.select_related('order','product')
         if user.is_staff:
             return items
-        return items.filter(Order__user=user)
+        return items.filter(order__user=user)
