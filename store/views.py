@@ -40,7 +40,7 @@ def parse_int(value):
     return int(value)
 class CartViewset(viewsets.ModelViewSet):
     serializer_class=CartSerializer
-    permission_classes=[IsCartOwner]
+    permission_classes=[IsCartOwner,IsAuthenticated]
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
     def perform_create(self, serializer):
@@ -111,7 +111,7 @@ class CartViewset(viewsets.ModelViewSet):
         )
 class CartItemViewset(viewsets.ModelViewSet):
     serializer_class=CartItemSerializer
-    permission_classes=[IsCartItemOwner]
+    permission_classes=[IsCartItemOwner,IsAuthenticated]
     def get_queryset(self):
         return Cart_item.objects.select_related('cart','product').filter(cart__user=self.request.user)
     def get_serializer_context(self):
@@ -125,7 +125,7 @@ class CartItemViewset(viewsets.ModelViewSet):
         return context
 class OrderViewset(viewsets.ModelViewSet):
     serializer_class=OrderSerializer
-    permission_classes=[IsOrderOwnerOrStaffReadOnly]
+    permission_classes=[IsOrderOwnerOrStaffReadOnly,IsAuthenticated]
     def get_queryset(self):
         if self.request.user.is_staff:
             return Order.objects.all()
