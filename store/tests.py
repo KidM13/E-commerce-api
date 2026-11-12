@@ -206,3 +206,66 @@ class EcommerceAPITests(TestCase):
 
         self.assertEqual(order.status, 'pending')
 
+    def test_customer_cannot_see_another_users_cart(self):
+        other_user = User.objects.create_user(
+            username='other',
+            password='testpass123'
+        )
+
+        Cart.objects.create(user=other_user)
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get('/api/cart/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_checkout_rejects_insufficient_stock(self):
+        cart = Cart.objects.create(user=self.user)
+
+        Cart_item.objects.create(
+            cart=cart,
+            product=self.product,
+            quantity=15
+        )
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post('/api/order/checkout/')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Order.objects.count(), 0)
+
+        self.product.refresh_from_db()
+
+        self.assertEqual(self.product.stock_count, 10)
+        self.assertTrue(
+            Cart_item.objects.filter(cart=cart).exists()
+        )
+
+    def test_customer_cannot_see_another_users_orders(self):
+        other_user = User.objects.create_user(
+            username='other',
+            password='testpass123'
+        )
+
+        Order.objects.create(user=other_user)
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get('/api/order/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_product_search(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            '/api/product/?search=Laptop'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 1)
+
