@@ -42,7 +42,7 @@ class CartViewset(viewsets.ModelViewSet):
     serializer_class=CartSerializer
     permission_classes=[IsCartOwner,IsAuthenticated]
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user)
+        return Cart.objects.filter(user=self.request.user).order_by('id')
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
@@ -127,9 +127,14 @@ class OrderViewset(viewsets.ModelViewSet):
     serializer_class=OrderSerializer
     permission_classes=[IsOrderOwnerOrStaffReadOnly,IsAuthenticated]
     def get_queryset(self):
+
         if self.request.user.is_staff:
-            return Order.objects.all()
-        return Order.objects.filter(user=self.request.user)
+
+            return Order.objects.all().order_by('-created_at', '-id')
+
+        return Order.objects.filter(
+        user=self.request.user
+    ).order_by('-created_at', '-id')
             
     def create(self, request, *args, **kwargs):
         return Response(
