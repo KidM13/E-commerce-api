@@ -63,6 +63,33 @@ E-commerce_api/
 | `/api/token/` | Obtain JWT tokens |
 | `/api/token/refresh/` | Refresh JWT tokens |
 
+## API Documentation
+
+This project uses **drf-spectacular** to generate OpenAPI documentation.
+
+The API documentation is available at:
+
+| Documentation | URL | Description |
+|---|---|---|
+| Swagger UI | `/api/docs/` | Interactive API documentation for exploring and testing endpoints. |
+| OpenAPI Schema | `/api/schema/` | Machine-readable API specification in YAML or JSON. |
+| ReDoc | `/api/redoc/` | Clean, read-only API documentation for developers. |
+
+### Authentication
+
+The API uses JWT authentication.
+
+1. Obtain an access token using `POST /api/token/`.
+2. Open Swagger UI at `/api/docs/`.
+3. Click **Authorize**.
+4. Enter your access token using the `Bearer` prefix:
+
+   ```text
+   Bearer YOUR_ACCESS_TOKEN
+   ```
+
+5. You can now test authenticated endpoints through Swagger UI.
+
 ## Running Locally
 
 ```bash
@@ -84,11 +111,5 @@ python manage.py runserver
 python manage.py test store
 ```
 
-## Authentication
 
-Most API endpoints require JWT authentication. Obtain an access token through `/api/token/` and include it in requests:
-
-```text
-Authorization: Bearer <access_token>
-```
 
