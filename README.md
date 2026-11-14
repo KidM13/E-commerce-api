@@ -66,7 +66,7 @@ E-commerce_api/
 ## Running Locally
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/KidM13/E-commerce-api.git
 cd E-commerce_api
 
 python -m venv venv
