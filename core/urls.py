@@ -17,6 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
+from rest_framework.permissions import AllowAny
 
 
 urlpatterns = [
@@ -26,3 +32,24 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
 ]
+path(
+    'api/schema/',
+    SpectacularAPIView.as_view(permission_classes=[AllowAny]),
+    name='schema'
+),
+path(
+    'api/docs/',
+    SpectacularSwaggerView.as_view(
+        url_name='schema',
+        permission_classes=[AllowAny]
+    ),
+    name='swagger-ui'
+),
+path(
+    'api/redoc/',
+    SpectacularRedocView.as_view(
+        url_name='schema',
+        permission_classes=[AllowAny]
+    ),
+    name='redoc'
+),
